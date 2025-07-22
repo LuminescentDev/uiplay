@@ -1,0 +1,53 @@
+@import url("https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap");
+
+@import "tailwindcss";
+
+@plugin "@anuragroy/tailwindcss-animate";
+
+@import "@luminescent/ui";
+
+@config "@luminescent/ui-qwik/config";
+@source "../node_modules/@luminescent/ui-qwik";
+
+@theme {
+  --lum-default-alpha: 70;
+  --lum-border-radius: 0.625rem;
+  --color-lum-border: #dfdfdfaa;
+}
+
+a.lum-btn, a.lum-card {
+  color: var(--color-text) !important;
+  text-decoration: none;
+}
+
+html {
+  font-family: Figtree, sans-serif;
+  background-color: var(--color-bg);
+}
+
+* {
+  scroll-behavior: smooth;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+*::-webkit-scrollbar {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #ffffff20;
+  border: 1px solid #ffffff20;
+  border-radius: 3px;
+}
+
+*::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
