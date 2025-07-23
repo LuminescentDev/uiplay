@@ -19,15 +19,38 @@ pub fn run() {
 }
 
 #[tauri::command]
-fn start_uxplay() {
-  println!("Starting uxplay...");
-  let mut cmd = Command::new("uxplay");
+async fn start_uxplay() {
+  println!("Checking if uxplay is already running...");
+  let check = Command::new("pgrep")
+    .arg("uxplay")
+    .output();
 
-  match cmd.output() {
-    Ok(output) => {
-      println!("uxplay stdout: {}", String::from_utf8_lossy(&output.stdout));
-      println!("uxplay stderr: {}", String::from_utf8_lossy(&output.stderr));
-      println!("uxplay exit status: {}", output.status);
+  match check {
+    Ok(output) if !output.stdout.is_empty() => {
+      println!("uxplay is already running.");
+      return;
+    }
+    Ok(_) => {
+      println!("uxplay is not running. Starting uxplay...");
+    }
+    Err(e) => {
+      eprintln!("Failed to check if uxplay is running: {}", e);
+      return;
+    }
+  }
+
+  let mut cmd = Command::new("uxplay");
+  // Inherit stdout/stderr so output appears in the terminal
+  match cmd.spawn() {
+    Ok(mut child) => {
+      match child.wait() {
+        Ok(status) => {
+          println!("uxplay exited with status: {}", status);
+        }
+        Err(e) => {
+          eprintln!("Failed to wait on uxplay: {}", e);
+        }
+      }
     }
     Err(e) => {
       eprintln!("Failed to start uxplay: {}", e);
