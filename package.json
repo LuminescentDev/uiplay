@@ -10,7 +10,7 @@
     "node": ">=21.0.0"
   },
   "engines-annotation": "Mostly required by sharp which needs a Node-API v9 compatible runtime",
-  "private": true,
+  "private": false,
   "type": "module",
   "scripts": {
     "build": "qwik build",
