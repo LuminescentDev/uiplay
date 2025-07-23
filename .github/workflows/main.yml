@@ -2,7 +2,7 @@ name: 'publish'
 on:
   push:
     branches:
-      - v3
+      - master
 
 jobs:
   publish-tauri:
@@ -22,7 +22,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 19
+          node-version: 21
           cache: pnpm
 
       - name: install Rust stable
