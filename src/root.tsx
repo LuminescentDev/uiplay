@@ -25,7 +25,7 @@ export default component$(() => {
         )}
         <RouterHead />
       </head>
-      <body lang="en" class="bg-bg text-lum-text mt-24">
+      <body lang="en" class="text-lum-text mt-24">
         <Nav />
         <RouterOutlet />
       </body>

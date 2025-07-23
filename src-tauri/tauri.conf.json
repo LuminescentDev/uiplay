@@ -13,6 +13,7 @@
     "windows": [
       {
         "decorations": false,
+        "transparent": true,
         "title": "UiPlay",
         "width": 800,
         "height": 600,

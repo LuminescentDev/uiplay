@@ -18,10 +18,16 @@ export default component$(() => {
   useVisibleTask$(() => {
     if (!terminalRef.value) return;
 
+    // get current css variable since xterm doesn't support variables directly
+    const fgColor = getComputedStyle(document.documentElement).getPropertyValue('--color-lum-text').trim() || '#ffffff';
     const term = new Terminal({
       cursorBlink: true,
       macOptionIsMeta: true,
       scrollback: 1000,
+      theme: {
+        background: '#00000000',
+        foreground: fgColor,
+      },
     });
     const webLinks = new WebLinksAddon();
     const search = new SearchAddon();

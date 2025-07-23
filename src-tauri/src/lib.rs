@@ -15,7 +15,7 @@ pub fn run() {
         )?;
       }
 
-      let tray = TrayIconBuilder::new()
+      TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
         .build(app)?;
 
