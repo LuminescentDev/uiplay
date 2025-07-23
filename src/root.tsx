@@ -3,6 +3,7 @@ import { QwikCityProvider, RouterOutlet } from '@builder.io/qwik-city';
 import { RouterHead } from './components/router-head/router-head';
 
 import './global.css';
+import Nav from './components/Nav';
 
 export default component$(() => {
   /**
@@ -24,7 +25,8 @@ export default component$(() => {
         )}
         <RouterHead />
       </head>
-      <body lang="en" class="bg-bg text-lum-text">
+      <body lang="en" class="bg-bg text-lum-text mt-24">
+            <Nav />
         <RouterOutlet />
       </body>
     </QwikCityProvider>

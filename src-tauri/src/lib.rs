@@ -1,6 +1,7 @@
 use std::{io::{BufRead, BufReader}, process::{Command, Stdio}};
 
 use tauri::Emitter;
+use tauri::tray::TrayIconBuilder;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -13,6 +14,11 @@ pub fn run() {
             .build(),
         )?;
       }
+
+      let tray = TrayIconBuilder::new()
+        .icon(app.default_window_icon().unwrap().clone())
+        .build(app)?;
+
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![start_uxplay])
@@ -76,6 +82,8 @@ async fn start_uxplay(app: tauri::AppHandle) {
   let mut child = Command::new("stdbuf")
     .arg("-oL") // force line buffering for stdout
     .arg("uxplay")
+    .arg("-n")
+    .arg("UiPlay")
     .stdout(Stdio::piped())
     .stderr(Stdio::piped())
     .spawn()

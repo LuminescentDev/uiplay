@@ -4,12 +4,7 @@ import Terminal from '~/components/Terminal';
 
 export default component$(() => {
   return (
-    <div class="flex flex-col min-h-screen py-14 px-8 gap-6">
-      <h1 class="flex gap-4 items-center text-5xl font-bold">
-        <span>
-          UiPlay
-        </span>
-      </h1>
+    <div class="flex flex-col px-8 gap-6">
       <Terminal />
     </div>
   );

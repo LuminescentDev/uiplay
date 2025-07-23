@@ -11,7 +11,7 @@
 
 @theme {
   --lum-default-alpha: 70;
-  --lum-border-radius: 1rem;
+  --lum-border-radius: 0.5rem;
   --color-green: var(--color-green-900);
   --color-red: var(--color-red-900);
   --color-orange: var(--color-orange-900);
@@ -87,4 +87,10 @@ html {
 
 *::-webkit-scrollbar-corner {
   background-color: transparent;
+}
+
+/* known issue with backdrop-filter in webkit */
+.backdrop-blur-lg {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
