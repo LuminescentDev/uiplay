@@ -1,9 +1,12 @@
-import { component$ } from '@builder.io/qwik';
+import { component$, useContext } from '@builder.io/qwik';
 import { Link } from '@builder.io/qwik-city';
 import { Window } from '@tauri-apps/api/window';
-import { Airplay, Minus, Settings, Square, X } from 'lucide-icons-qwik';
+import { Airplay, Minus, Settings, Square, Terminal, X } from 'lucide-icons-qwik';
+import { UiPlayStoreContext } from '~/routes/layout';
 
 export default component$(() => {
+  const UiPlayStore = useContext(UiPlayStoreContext);
+
   return (
     <div data-tauri-drag-region class="flex justify-between fixed top-0 w-full lum-bg-gray-900/80 backdrop-blur-lg z-20 border-0 border-b p-2">
       <div>
@@ -18,6 +21,11 @@ export default component$(() => {
         <Link href="/settings" class="lum-btn lum-bg-transparent p-2">
           <Settings size={20} />
         </Link>
+        <button class="lum-btn lum-bg-transparent p-2" onClick$={() => {
+          UiPlayStore.TerminalOpen = !UiPlayStore.TerminalOpen;
+        }}>
+          <Terminal size={20} />
+        </button>
         <button class="lum-btn lum-bg-transparent p-2" onClick$={() => {
           Window.getCurrent().minimize();
         }}>

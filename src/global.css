@@ -10,6 +10,19 @@
 @source "../node_modules/@luminescent/ui-qwik";
 
 @theme {
+  --color-gray-50: oklch(98.5% 0.002 278.839);
+  --color-gray-100: oklch(96.7% 0.003 295.542);
+  --color-gray-200: oklch(92.8% 0.006 295.531);
+  --color-gray-300: oklch(87.2% 0.01 289.338);
+  --color-gray-400: oklch(70.7% 0.022 292.325);
+  --color-gray-500: oklch(55.1% 0.027 295.364);
+  --color-gray-600: oklch(44.6% 0.03 287.802);
+  --color-gray-700: oklch(37.3% 0.034 290.733);
+  --color-gray-800: oklch(27.8% 0.033 287.848);
+  --color-gray-850: oklch(23.2% 0.03 290.733);
+  --color-gray-900: oklch(21% 0.034 295.665);
+  --color-gray-950: oklch(13% 0.028 292.692);
+
   --lum-default-alpha: 40;
   --lum-border-radius: 0.5rem;
   --color-green: var(--color-green-900);
@@ -59,7 +72,7 @@ a.lum-btn, a.lum-card {
 
 html {
   font-family: Figtree, sans-serif;
-  background-color: --alpha(var(--color-bg) / 50%);
+  background-color: --alpha(var(--color-bg) / 100%);
 }
 
 * {
@@ -76,7 +89,7 @@ html {
 }
 
 *::-webkit-scrollbar-track {
-  background-color: transparent;
+  background-color: --alpha(var(--color-lum-card-bg) / 100%);
 }
 
 *::-webkit-scrollbar-thumb {

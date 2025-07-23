@@ -19,6 +19,8 @@ pub fn run() {
         .icon(app.default_window_icon().unwrap().clone())
         .build(app)?;
 
+      tauri::async_runtime::spawn(start_uxplay(app.handle().clone()));
+
       Ok(())
     })
     .invoke_handler(tauri::generate_handler![start_uxplay])
@@ -122,5 +124,12 @@ async fn start_uxplay(app: tauri::AppHandle) {
   stdout_thread.join().expect("Failed to join stdout thread");
   stderr_thread.join().expect("Failed to join stderr thread");
 
+  app.emit("uxplay-output", format!("uxplay process exited with status: {}", status)).unwrap();
   println!("Process exited with status: {}", status);
+
+  // Attempt to start uxplay again
+  app.emit("uxplay-output", "Trying to start uxplay again...").unwrap();
+  std::thread::spawn(move || {
+    tauri::async_runtime::block_on(start_uxplay(app));
+  });
 }
