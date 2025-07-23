@@ -4,6 +4,12 @@ import { WebLinksAddon } from '@xterm/addon-web-links';
 import { SearchAddon } from '@xterm/addon-search';
 import '@xterm/xterm/css/xterm.css';
 import { FitAddon } from '@xterm/addon-fit';
+import { listen } from '@tauri-apps/api/event';
+import { invoke } from '@tauri-apps/api/core';
+
+type UxPlayOutput = {
+  output: string;
+};
 
 export default component$(() => {
   const terminalRef = useSignal<HTMLDivElement>();
@@ -25,6 +31,10 @@ export default component$(() => {
 
     terminalInstance.value = term;
     fitSignal.value = fitAddon;
+    invoke('start_uxplay');
+    listen<UxPlayOutput>('uxplay-output', (event) => {
+      term.write(event.payload.output);
+    });
 
     term.loadAddon(fitSignal.value);
     term.loadAddon(webLinks);
