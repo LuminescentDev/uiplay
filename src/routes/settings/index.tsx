@@ -6,7 +6,7 @@ export default component$(() => {
   const UiPlayStore = useContext(UiPlayStoreContext);
 
   return (
-    <div class="flex flex-col px-8">
+    <>
       <h1 class="text-2xl font-bold">Settings</h1>
       <p class="text-lg mb-4">Configure your preferences here.</p>
 
@@ -24,7 +24,7 @@ export default component$(() => {
       <p class="text-sm text-gray-500 mt-8">
         More settings will be added soon.
       </p>
-    </div>
+    </>
   );
 });
 

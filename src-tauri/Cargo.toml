@@ -25,3 +25,4 @@ tauri = { version = "2.7.0", features = [
   "tray-icon"
 ] }
 tauri-plugin-log = "2"
+tauri-plugin-fs = "2"

@@ -38,6 +38,7 @@ export default defineConfig(({ command, mode }): UserConfig => {
         '@tauri-apps/api/event',
         '@tauri-apps/api/core',
         '@tauri-apps/api/window',
+        '@tauri-apps/plugin-fs',
       ],
       // Put problematic deps that break bundling here, mostly those with binaries.
       // For example ['better-sqlite3'] if you use that in server functions.

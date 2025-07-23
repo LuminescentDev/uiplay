@@ -11,6 +11,7 @@ type UiPlayStore = {
   Name: string;
   Socket?: string;
   NowPlaying?: {
+    AlbumArt?: string;
     Album?: string;
     Artist?: string;
     Title?: string;
@@ -264,7 +265,9 @@ export default component$(() => {
   return (
     <>
       <Nav />
-      <Slot />
+      <div class="flex flex-col justify-center max-w-7xl mx-auto px-16 min-h-screen pt-16">
+        <Slot />
+      </div>
       <div id="terminal-container" class={{
         'transition-all duration-300 absolute inset-24 lum-bg-bg/100 border border-lum-border/40 rounded-lum backdrop-blur-lg p-4': true,
         'opacity-0 pointer-events-none -mt-2': !UiPlayStore.TerminalOpen,

@@ -1,11 +1,16 @@
-use std::{io::{BufRead, BufReader}, process::{Command, Stdio}};
+use std::{
+  io::{BufRead, BufReader},
+  process::{Command, Stdio},
+};
 
-use tauri::Emitter;
 use tauri::tray::TrayIconBuilder;
+use tauri::{path::BaseDirectory, Emitter, Manager};
+use tauri_plugin_fs::FsExt;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
+    .plugin(tauri_plugin_fs::init())
     .setup(|app| {
       if cfg!(debug_assertions) {
         app.handle().plugin(
@@ -14,6 +19,16 @@ pub fn run() {
             .build(),
         )?;
       }
+
+      let config_dir = app
+        .path()
+        .resolve("uiplay", BaseDirectory::Config)
+        .expect("Failed to resolve config dir")
+        .to_string_lossy()
+        .to_string();
+      // allowed the given directory
+      let scope = app.fs_scope();
+      let _ = scope.allow_directory(&config_dir, false);
 
       TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
@@ -31,9 +46,7 @@ pub fn run() {
 #[tauri::command]
 async fn start_uxplay(app: tauri::AppHandle) {
   println!("Checking if uxplay is already running...");
-  let check = Command::new("pgrep")
-    .arg("uxplay")
-    .output();
+  let check = Command::new("pgrep").arg("uxplay").output();
 
   let mut killed = false;
 
@@ -78,16 +91,32 @@ async fn start_uxplay(app: tauri::AppHandle) {
   }
 
   if killed {
-    app.emit("uxplay-output", "Previous uxplay process killed. Starting new instance...").unwrap();
+      app.emit(
+          "uxplay-output",
+          "Previous uxplay process killed. Starting new instance...",
+      )
+      .unwrap();
   }
 
+  // import the default GStreamer plugin path
+  let default_path = "/usr/lib/gstreamer-1.0";
+  let user_path = std::env::var("GST_PLUGIN_PATH").unwrap_or_default();
+  let merged = format!("{}:{}", user_path, default_path);
+
   let mut child = Command::new("stdbuf")
+    .env("GST_PLUGIN_PATH", merged)
     .arg("-oL") // force line buffering for stdout
     .arg("uxplay")
     .arg("-n")
     .arg("UiPlay")
     .arg("-ca") // show album art
-    .arg("./uxplay-assets-album-art.png") // path to album art image
+    .arg(
+      app.path()
+        .resolve("uiplay/albumart.png", BaseDirectory::Config)
+        .expect("Failed to resolve uiplay/albumart.png")
+        .to_string_lossy()
+        .to_string(),
+    )
     .arg("-async") // enable async mode
     .stdout(Stdio::piped())
     .stderr(Stdio::piped())

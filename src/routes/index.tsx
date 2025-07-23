@@ -1,23 +1,112 @@
-import { component$, useContext } from '@builder.io/qwik';
+import { component$, isBrowser, useContext, useTask$ } from '@builder.io/qwik';
 import { type DocumentHead } from '@builder.io/qwik-city';
 import { UiPlayStoreContext } from './layout';
-import { DiscAlbum, Laptop, Music, Smartphone, Trash } from 'lucide-icons-qwik';
+import { Laptop, Music, Smartphone, Trash } from 'lucide-icons-qwik';
+import { readFile, BaseDirectory } from '@tauri-apps/plugin-fs';
 
 export default component$(() => {
   const UiPlayStore = useContext(UiPlayStoreContext);
 
+  useTask$(async ({ track }) => {
+    if (!isBrowser) return;
+    track(() => UiPlayStore.NowPlaying?.Progress?.min);
+    try {
+      const albumArt = await readFile('uiplay/albumart.png', {
+        baseDir: BaseDirectory.Config,
+      });
+      const base64AlbumArt = btoa(String.fromCharCode(...albumArt));
+      if (UiPlayStore.NowPlaying) UiPlayStore.NowPlaying.AlbumArt = `data:image/png;base64,${base64AlbumArt}`;
+    }
+    catch (error) {
+      console.error('Failed to read album art:', error);
+      // Handle the error, e.g., set a default album art or notify the user
+    }
+  });
+
   return (
-    <div class="flex flex-col px-8">
+    <>
       <h1 class="text-2xl font-bold">
         Welcome to UiPlay :3
       </h1>
       <p class="text-lg text-gray-300">
         A UxPlay wrapper that forwards music data to mpris and Discord RPC.
       </p>
-      {!UiPlayStore.Devices.length &&
-        <p class="mt-10">
+      {!UiPlayStore.Devices.length && !UiPlayStore.NowPlaying &&
+        <p class="mt-10 text-gray-500">
           Go ahead and airplay! Info will be displayed here.
         </p>
+      }
+      {UiPlayStore.NowPlaying &&
+        <div class="lum-card lum-bg-lum-card-bg/80 flex-row items-center mt-8 gap-8 relative overflow-hidden rounded-xl">
+          <img
+            src={UiPlayStore.NowPlaying.AlbumArt}
+            alt="Album Art"
+            width={400}
+            height={400}
+            class="absolute inset-0 w-full h-full object-cover -z-2 blur-xl"
+            style={{ clipPath: 'inset(0 round 0.75rem)' }}
+          />
+          {UiPlayStore.NowPlaying.AlbumArt &&
+            <div>
+              <img
+                src={UiPlayStore.NowPlaying.AlbumArt}
+                alt="Album Art"
+                width={96}
+                height={96}
+                class="h-24 rounded-lg object-cover"
+              />
+            </div>
+          }
+          <div class="flex-1">
+            <h2 class="text-xl font-semibold flex items-center gap-2">
+              <Music size={20} />
+              {UiPlayStore.NowPlaying.Title && (
+                <span>
+                  {UiPlayStore.NowPlaying.Title}
+                </span>
+              )}
+            </h2>
+            {UiPlayStore.NowPlaying.Artist &&
+              <p class="text-gray-400">
+                by {UiPlayStore.NowPlaying.Artist}
+              </p>
+            }
+            <p class="text-gray-500">
+              {UiPlayStore.NowPlaying.Album &&
+                <span>
+                  {UiPlayStore.NowPlaying.Album}
+                </span>
+              }
+              {' - '}
+              {UiPlayStore.NowPlaying.Genre &&
+                <span>
+                  {UiPlayStore.NowPlaying.Genre}
+                </span>
+              }
+            </p>
+            {UiPlayStore.NowPlaying.Progress && UiPlayStore.NowPlaying.Remaining && UiPlayStore.NowPlaying.Length &&
+              <div class="w-full h-2 lum-bg-gray-700 rounded-full mt-2">
+                <div class="h-full bg-gray-200 rounded-full" style={{
+                  width: `${
+                    (UiPlayStore.NowPlaying.Progress.min * 60 + UiPlayStore.NowPlaying.Progress.sec)
+                    /
+                    (UiPlayStore.NowPlaying.Length.min * 60 + UiPlayStore.NowPlaying.Length.sec) * 100
+                  }%`,
+                }} />
+              </div>
+            }
+            {UiPlayStore.NowPlaying.Progress && UiPlayStore.NowPlaying.Length &&
+              <div class="flex justify-between text-sm text-gray-500 mt-1">
+                <p>
+                  {UiPlayStore.NowPlaying.Progress.min}:{UiPlayStore.NowPlaying.Progress.sec.toString().padStart(2, '0')}
+                </p>
+                <p>
+                  {UiPlayStore.NowPlaying.Length.min}:{UiPlayStore.NowPlaying.Length.sec.toString().padStart(2, '0')}
+                </p>
+              </div>
+            }
+          </div>
+        </div>
       }
       {UiPlayStore.Devices.map((device) => (
         <div key={device.DeviceID} class="lum-card flex-row items-center gap-4 mt-4">
@@ -59,64 +148,7 @@ export default component$(() => {
           }
         </div>
       ))}
-      {UiPlayStore.NowPlaying &&
-        <div class="lum-card flex-row mt-8 ">
-          <div>
-            <DiscAlbum size={120} class="text-lum-text" />
-          </div>
-          <div class="flex-1">
-            <h2 class="text-xl font-semibold flex items-center gap-2">
-              <Music size={20} />
-              {UiPlayStore.NowPlaying.Title && (
-                <span>{UiPlayStore.NowPlaying.Title}</span>
-              )}
-            </h2>
-            {UiPlayStore.NowPlaying.Artist &&
-              <p class="text-gray-400">
-                by {UiPlayStore.NowPlaying.Artist}
-              </p>
-            }
-            <p class="text-gray-500">
-              {UiPlayStore.NowPlaying.Album &&
-                <span>
-                  {UiPlayStore.NowPlaying.Album}
-                </span>
-              }
-              {' - '}
-              {UiPlayStore.NowPlaying.Genre &&
-                <span>
-                  {UiPlayStore.NowPlaying.Genre}
-                </span>
-              }
-            </p>
-            {UiPlayStore.NowPlaying.Progress && UiPlayStore.NowPlaying.Remaining && UiPlayStore.NowPlaying.Length &&
-              <div class="w-full h-2 lum-bg-gray-700 rounded-full mt-2">
-                <div class="h-full lum-bg-gray-200" style={{
-                  width: `${
-                    (UiPlayStore.NowPlaying.Progress.min * 60 + UiPlayStore.NowPlaying.Progress.sec)
-                    /
-                    (UiPlayStore.NowPlaying.Length.min * 60 + UiPlayStore.NowPlaying.Length.sec) * 100
-                  }%`,
-                }} />
-              </div>
-            }
-            {UiPlayStore.NowPlaying.Progress && UiPlayStore.NowPlaying.Length &&
-              <div class="flex justify-between text-sm text-gray-500 mt-1">
-                <p>
-                  {UiPlayStore.NowPlaying.Progress.min}:{UiPlayStore.NowPlaying.Progress.sec.toString().padStart(2, '0')}
-                </p>
-                <p>
-                  {UiPlayStore.NowPlaying.Length.min}:{UiPlayStore.NowPlaying.Length.sec.toString().padStart(2, '0')}
-                </p>
-              </div>
-            }
-          </div>
-        </div>
-      }
-      <p class="whitespace-pre-wrap text-gray-950 mt-4">
-        {JSON.stringify(UiPlayStore, null, 2)}
-      </p>
-    </div>
+    </>
   );
 });
 
