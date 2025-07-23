@@ -7,9 +7,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 
-type UxPlayOutput = {
-  output: string;
-};
+type UxPlayOutput = string;
 
 export default component$(() => {
   const terminalRef = useSignal<HTMLDivElement>();
@@ -33,7 +31,7 @@ export default component$(() => {
     fitSignal.value = fitAddon;
     invoke('start_uxplay');
     listen<UxPlayOutput>('uxplay-output', (event) => {
-      term.write(event.payload.output);
+      term.write(event.payload + '\r\n');
     });
 
     term.loadAddon(fitSignal.value);
