@@ -1,7 +1,7 @@
 import { component$, useContext } from '@builder.io/qwik';
 import { type DocumentHead } from '@builder.io/qwik-city';
 import { UiPlayStoreContext } from './layout';
-import { Laptop, Smartphone } from 'lucide-icons-qwik';
+import { Laptop, Smartphone, Trash } from 'lucide-icons-qwik';
 
 export default component$(() => {
   const UiPlayStore = useContext(UiPlayStoreContext);
@@ -27,7 +27,7 @@ export default component$(() => {
           {device.DeviceName.includes('Mac') &&
             <Laptop size={24} class="text-lum-text" />
           }
-          <div>
+          <div class="flex-1">
             <p class="font-semibold">
               {device.DeviceName} <div class={{
                 'inline-block w-2 h-2 rounded-full ml-2': true,
@@ -49,6 +49,14 @@ export default component$(() => {
               }
             </p>
           </div>
+          {!device.Connected &&
+            <button class="lum-btn lum-bg-transparent p-2 text-red-300 hover:text-red-400"
+              onClick$={() => {
+                UiPlayStore.Devices = UiPlayStore.Devices.filter(d => d.DeviceID !== device.DeviceID);
+              }}>
+              <Trash size={20} />
+            </button>
+          }
         </div>
       ))}
       <p class="whitespace-pre-wrap text-gray-500 mt-4">
