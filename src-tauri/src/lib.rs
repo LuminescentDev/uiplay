@@ -86,6 +86,9 @@ async fn start_uxplay(app: tauri::AppHandle) {
     .arg("uxplay")
     .arg("-n")
     .arg("UiPlay")
+    .arg("-ca") // show album art
+    .arg("./uxplay-assets-album-art.png") // path to album art image
+    .arg("-async") // enable async mode
     .stdout(Stdio::piped())
     .stderr(Stdio::piped())
     .spawn()

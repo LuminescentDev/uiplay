@@ -1,7 +1,7 @@
 import { component$, useContext } from '@builder.io/qwik';
 import { type DocumentHead } from '@builder.io/qwik-city';
 import { UiPlayStoreContext } from './layout';
-import { Laptop, Smartphone, Trash } from 'lucide-icons-qwik';
+import { Laptop, Music, Smartphone, Trash } from 'lucide-icons-qwik';
 
 export default component$(() => {
   const UiPlayStore = useContext(UiPlayStoreContext);
@@ -59,6 +59,53 @@ export default component$(() => {
           }
         </div>
       ))}
+      {UiPlayStore.NowPlaying && UiPlayStore.NowPlaying.Title &&
+        <div class="lum-card mt-8 gap-0">
+          <h2 class="text-xl font-semibold flex items-center gap-2">
+            <Music size={20} />
+            {UiPlayStore.NowPlaying.Title}
+          </h2>
+          {UiPlayStore.NowPlaying.Artist &&
+            <p class="text-gray-400">
+              by {UiPlayStore.NowPlaying.Artist}
+            </p>
+          }
+          <p class="text-gray-500">
+            {UiPlayStore.NowPlaying.Album &&
+              <span>
+                {UiPlayStore.NowPlaying.Album}
+              </span>
+            }
+            {' - '}
+            {UiPlayStore.NowPlaying.Genre &&
+              <span>
+                {UiPlayStore.NowPlaying.Genre}
+              </span>
+            }
+          </p>
+          {UiPlayStore.NowPlaying.Progress && UiPlayStore.NowPlaying.Remaining && UiPlayStore.NowPlaying.Length &&
+            <div class="w-full h-2 lum-bg-gray-700 rounded-full mt-2">
+              <div class="h-full lum-bg-gray-200" style={{
+                width: `${
+                  (UiPlayStore.NowPlaying.Progress.min * 60 + UiPlayStore.NowPlaying.Progress.sec)
+                  /
+                  (UiPlayStore.NowPlaying.Length.min * 60 + UiPlayStore.NowPlaying.Length.sec) * 100
+                }%`,
+              }} />
+            </div>
+          }
+          {UiPlayStore.NowPlaying.Progress && UiPlayStore.NowPlaying.Length &&
+            <div class="flex justify-between text-sm text-gray-500 mt-1">
+              <p>
+                {UiPlayStore.NowPlaying.Progress.min}:{UiPlayStore.NowPlaying.Progress.sec.toString().padStart(2, '0')}
+              </p>
+              <p>
+                {UiPlayStore.NowPlaying.Length.min}:{UiPlayStore.NowPlaying.Length.sec.toString().padStart(2, '0')}
+              </p>
+            </div>
+          }
+        </div>
+      }
       <p class="whitespace-pre-wrap text-gray-500 mt-4">
         {JSON.stringify(UiPlayStore, null, 2)}
       </p>

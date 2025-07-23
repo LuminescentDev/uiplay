@@ -10,6 +10,24 @@ import Nav from '~/components/Nav';
 type UiPlayStore = {
   Name: string;
   Socket?: string;
+  NowPlaying?: {
+    Album?: string;
+    Artist?: string;
+    Title?: string;
+    Genre?: string;
+    Progress?: {
+      min: number;
+      sec: number;
+    };
+    Remaining?: {
+      min: number;
+      sec: number;
+    };
+    Length?: {
+      min: number;
+      sec: number;
+    };
+  };
   Devices: {
     Socket?: string;
     DeviceID: string;
@@ -36,6 +54,18 @@ export default component$(() => {
   useContextProvider(TerminalRefContext, terminalRef);
   const fitSignal = useSignal<FitAddon>();
   const terminalInstance = useSignal<Terminal>();
+
+  // eslint-disable-next-line qwik/no-use-visible-task
+  useVisibleTask$(() => {
+    setInterval(() => {
+      if (!UiPlayStore.NowPlaying?.Progress) return;
+      UiPlayStore.NowPlaying.Progress.sec += 1;
+      if (UiPlayStore.NowPlaying.Progress.sec >= 60) {
+        UiPlayStore.NowPlaying.Progress.sec = 0;
+        UiPlayStore.NowPlaying.Progress.min += 1;
+      }
+    }, 1000);
+  });
 
   // eslint-disable-next-line qwik/no-use-visible-task
   useVisibleTask$(() => {
@@ -124,6 +154,76 @@ export default component$(() => {
 
         device.Audio = {
           Format,
+        };
+      }
+
+      if (event.payload.startsWith('Album')) {
+        const regex = /Album: (.*)/;
+        const match = event.payload.match(regex);
+        if (!match) return;
+
+        const Album = match[1];
+
+        if (!UiPlayStore.NowPlaying) UiPlayStore.NowPlaying = {};
+        UiPlayStore.NowPlaying.Album = Album;
+      }
+
+      if (event.payload.startsWith('Artist')) {
+        const regex = /Artist: (.*)/;
+        const match = event.payload.match(regex);
+        if (!match) return;
+
+        const Artist = match[1];
+
+        if (!UiPlayStore.NowPlaying) UiPlayStore.NowPlaying = {};
+        UiPlayStore.NowPlaying.Artist = Artist;
+      }
+
+      if (event.payload.startsWith('Genre')) {
+        const regex = /Genre: (.*)/;
+        const match = event.payload.match(regex);
+        if (!match) return;
+
+        const Genre = match[1];
+
+        if (!UiPlayStore.NowPlaying) UiPlayStore.NowPlaying = {};
+        UiPlayStore.NowPlaying.Genre = Genre;
+      }
+
+      if (event.payload.startsWith('Title')) {
+        const regex = /Title: (.*)/;
+        const match = event.payload.match(regex);
+        if (!match) return;
+
+        const Title = match[1];
+
+        if (!UiPlayStore.NowPlaying) UiPlayStore.NowPlaying = {};
+        UiPlayStore.NowPlaying.Title = Title;
+      }
+
+      if (event.payload.startsWith('audio progress')) {
+        // min:sec regex
+        const regex = /(\d+):(\d+)/g;
+        const match = event.payload.matchAll(regex);
+        const matches = Array.from(match);
+        console.log(matches);
+
+        const progress = matches[0].slice(1).map(Number);
+        const remaining = matches[1].slice(1).map(Number);
+        const length = matches[2].slice(1).map(Number);
+
+        if (!UiPlayStore.NowPlaying) UiPlayStore.NowPlaying = {};
+        UiPlayStore.NowPlaying.Progress = {
+          min: progress[0],
+          sec: progress[1],
+        };
+        UiPlayStore.NowPlaying.Remaining = {
+          min: remaining[0],
+          sec: remaining[1],
+        };
+        UiPlayStore.NowPlaying.Length = {
+          min: length[0],
+          sec: length[1],
         };
       }
 
