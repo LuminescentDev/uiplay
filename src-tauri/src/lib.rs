@@ -6,6 +6,7 @@ use std::{
 use tauri::tray::TrayIconBuilder;
 use tauri::{path::BaseDirectory, Emitter, Manager};
 use tauri_plugin_fs::FsExt;
+use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -116,6 +117,31 @@ async fn start_uxplay(app: tauri::AppHandle) {
 
   let stdout = child.stdout.take().expect("Failed to capture stdout");
   let stderr = child.stderr.take().expect("Failed to capture stderr");
+
+  let mut client: DiscordIpcClient = DiscordIpcClient::new(
+    "1397877327622311997"
+  ).expect("Failed to create DiscordIpcClient");
+
+  if let Err(e) = client.connect() {
+    log_output(app.clone(), format!("Failed to connect to Discord IPC: {}", e));
+    return;
+  }
+
+  let activity = activity::Activity::new()
+    .activity_type(activity::ActivityType::Listening)
+    .state("Lil Wayne")
+    .details("A Milli")
+    .assets(activity::Assets::new()
+      .large_image("https://upload.wikimedia.org/wikipedia/en/c/c8/CarterIII.jpg")
+      .large_text("Tha Carter III")
+      .small_image("icon")
+      .small_text("Playing on UiPlay@sab-arch")
+    );
+
+  if let Err(e) = client.set_activity(activity) {
+    log_output(app.clone(), format!("Failed to set Discord activity: {}", e));
+    return;
+  }
 
   let app_stdout = app.clone();
   let app_stderr = app.clone();
