@@ -45,15 +45,13 @@ pub fn run() {
 
 #[tauri::command]
 async fn start_uxplay(app: tauri::AppHandle) {
-  println!("Checking if uxplay is already running...");
   let check = Command::new("pgrep").arg("uxplay").output();
 
   let mut killed = false;
 
   match check {
     Ok(output) if !output.stdout.is_empty() => {
-      println!("uxplay is already running, restarting...");
-      app.emit("uxplay-output", "uxplay is already running, restarting...").unwrap();
+      log_output(app.clone(), "UxPlay is already running, restarting...");
       // Kill the existing uxplay process and wait for it to exit
       let kill = Command::new("pkill")
         .arg("uxplay")
@@ -73,29 +71,22 @@ async fn start_uxplay(app: tauri::AppHandle) {
           }
         }
         Err(e) => {
-          eprintln!("Failed to kill existing uxplay process: {}", e);
-          app.emit("uxplay-output", format!("Failed to kill uxplay: {}", e)).unwrap();
+          log_output(app.clone(), format!("Failed to kill UxPlay: {}", e));
           return;
         }
       }
     }
     Ok(_) => {
-      println!("uxplay is not running. Starting uxplay...");
-      app.emit("uxplay-output", "Starting uxplay...").unwrap();
+      log_output(app.clone(), "UxPlay is not running, starting a new instance...");
     }
     Err(e) => {
-      eprintln!("Failed to check if uxplay is running: {}", e);
-      app.emit("uxplay-output", format!("Failed to check uxplay: {}", e)).unwrap();
+      log_output(app.clone(), format!("Failed to check if UxPlay is running: {}", e));
       return;
     }
   }
 
   if killed {
-      app.emit(
-          "uxplay-output",
-          "Previous uxplay process killed. Starting new instance...",
-      )
-      .unwrap();
+    log_output(app.clone(), "Previous UxPlay process killed. Starting new instance...");
   }
 
   // import the default GStreamer plugin path
@@ -133,12 +124,9 @@ async fn start_uxplay(app: tauri::AppHandle) {
     let reader = BufReader::new(stdout);
     for line in reader.lines() {
       match line {
-        Ok(l) => app_stdout.emit("uxplay-output", l).unwrap(),
-        Err(e) => {
-          eprintln!("Error reading stdout: {}", e);
-          app_stdout.emit("uxplay-output", format!("Error reading stdout: {}", e)).unwrap();
-        },
-      }
+        Ok(l) => log_output(app_stdout.clone(), l),
+        Err(e) => log_output(app_stdout.clone(), format!("Error reading stdout: {}", e)),
+      };
     }
   });
 
@@ -146,9 +134,9 @@ async fn start_uxplay(app: tauri::AppHandle) {
     let reader = BufReader::new(stderr);
     for line in reader.lines() {
       match line {
-        Ok(l) => app_stderr.emit("uxplay-output", format!("[STDERR] {}", l)).unwrap(),
-        Err(e) => eprintln!("Error reading stderr: {}", e),
-      }
+        Ok(l) => log_output(app_stderr.clone(), format!("[STDERR] {}", l)),
+        Err(e) => log_output(app_stderr.clone(), format!("Error reading stderr: {}", e)),
+      };
     }
   });
 
@@ -164,4 +152,13 @@ async fn start_uxplay(app: tauri::AppHandle) {
   std::thread::spawn(move || {
     tauri::async_runtime::block_on(start_uxplay(app));
   });
+}
+
+fn log_output(
+    app: tauri::AppHandle,
+    output: impl Into<String>,
+) {
+    let message = output.into();
+    println!("{}", message);
+    app.emit("uxplay-output", message).unwrap();
 }

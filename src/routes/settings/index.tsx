@@ -1,6 +1,7 @@
 import { component$, useContext } from '@builder.io/qwik';
 import type { DocumentHead } from '@builder.io/qwik-city';
 import { UiPlayStoreContext } from '../layout';
+import { Save } from 'lucide-icons-qwik';
 
 export default component$(() => {
   const UiPlayStore = useContext(UiPlayStoreContext);
@@ -16,14 +17,28 @@ export default component$(() => {
         type="text"
         class="lum-input"
         placeholder="Enter the name of the UxPlay instance"
-        value={UiPlayStore.Name}
-        onInput$={(e, el) => UiPlayStore.Name = el.value }
+        value={UiPlayStore.Settings.Name}
+        onInput$={(e, el) => UiPlayStore.Settings.Name = el.value }
       />
 
-      {/* Add settings components or forms here */}
-      <p class="text-sm text-gray-500 mt-8">
-        More settings will be added soon.
-      </p>
+      <div>
+        <button
+          class="lum-btn mt-4 lum-bg-green-800"
+          onClick$={() => {
+            // Logic to save settings can be added here
+            console.log('Settings saved:', UiPlayStore.Settings);
+          }}
+        >
+          <Save size={24} />
+          Save and restart UxPlay
+        </button>
+      </div>
+      <div class="mt-6">
+        <h2 class="text-lg font-semibold">Current Settings</h2>
+        <pre class="bg-gray-800 p-4 rounded-lg">
+          {JSON.stringify(UiPlayStore.Settings, null, 2)}
+        </pre>
+      </div>
     </>
   );
 });

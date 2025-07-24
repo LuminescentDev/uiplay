@@ -6,9 +6,12 @@ import { WebLinksAddon } from '@xterm/addon-web-links';
 import { Terminal } from '@xterm/xterm';
 import '@xterm/xterm/css/xterm.css';
 import Nav from '~/components/Nav';
+import { readFile, BaseDirectory } from '@tauri-apps/plugin-fs';
 
 type UiPlayStore = {
-  Name: string;
+  Settings: {
+    Name: string;
+  };
   Socket?: string;
   NowPlaying?: {
     AlbumArt?: string;
@@ -46,7 +49,9 @@ export const UiPlayStoreContext = createContextId<UiPlayStore>('UiPlayStoreConte
 export const TerminalRefContext = createContextId<Signal<HTMLDivElement>>('TerminalRefContext');
 export default component$(() => {
   const UiPlayStore = useStore<UiPlayStore>({
-    Name: 'UiPlay',
+    Settings: {
+      Name: 'UiPlay',
+    },
     Devices: [],
   });
   useContextProvider(UiPlayStoreContext, UiPlayStore);
@@ -91,7 +96,7 @@ export default component$(() => {
     fitSignal.value = fitAddon;
 
     let DeviceID = '';
-    listen<string>('uxplay-output', (event) => {
+    listen<string>('uxplay-output', async (event) => {
       term.write(event.payload + '\r\n');
 
       if (event.payload.startsWith('Accepted')) {
@@ -167,6 +172,18 @@ export default component$(() => {
 
         if (!UiPlayStore.NowPlaying) UiPlayStore.NowPlaying = {};
         UiPlayStore.NowPlaying.Album = Album;
+
+        try {
+          const albumArt = await readFile('uiplay/albumart.png', {
+            baseDir: BaseDirectory.Config,
+          });
+          const base64AlbumArt = btoa(String.fromCharCode(...albumArt));
+          console.log('Album art read successfully:', base64AlbumArt);
+          if (UiPlayStore.NowPlaying) UiPlayStore.NowPlaying.AlbumArt = `data:image/png;base64,${base64AlbumArt}`;
+        }
+        catch (error) {
+          console.error('Failed to read album art:', error);
+        }
       }
 
       if (event.payload.startsWith('Artist')) {

@@ -1,31 +1,17 @@
-import { component$, isBrowser, useContext, useTask$ } from '@builder.io/qwik';
+import { component$, useContext } from '@builder.io/qwik';
 import { type DocumentHead } from '@builder.io/qwik-city';
 import { UiPlayStoreContext } from './layout';
-import { Laptop, Music, Smartphone, Trash } from 'lucide-icons-qwik';
-import { readFile, BaseDirectory } from '@tauri-apps/plugin-fs';
+import { Airplay, Laptop, Music, Smartphone, Trash } from 'lucide-icons-qwik';
 
 export default component$(() => {
   const UiPlayStore = useContext(UiPlayStoreContext);
 
-  useTask$(async ({ track }) => {
-    if (!isBrowser) return;
-    track(() => UiPlayStore.NowPlaying?.Progress?.min);
-    try {
-      const albumArt = await readFile('uiplay/albumart.png', {
-        baseDir: BaseDirectory.Config,
-      });
-      const base64AlbumArt = btoa(String.fromCharCode(...albumArt));
-      if (UiPlayStore.NowPlaying) UiPlayStore.NowPlaying.AlbumArt = `data:image/png;base64,${base64AlbumArt}`;
-    }
-    catch (error) {
-      console.error('Failed to read album art:', error);
-      // Handle the error, e.g., set a default album art or notify the user
-    }
-  });
-
   return (
     <>
-      <h1 class="text-2xl font-bold">
+      <span class="flex items-center gap-2 text-[#f0ccfb]!" style="filter: drop-shadow(0 0 1rem #CB6CE6);">
+        <Airplay size={96} strokeWidth={2} />
+      </span>
+      <h1 class="text-2xl font-bold mt-4">
         Welcome to UiPlay :3
       </h1>
       <p class="text-lg text-gray-300">
