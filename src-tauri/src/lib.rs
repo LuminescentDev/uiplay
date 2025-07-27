@@ -7,6 +7,7 @@ use tauri::tray::TrayIconBuilder;
 use tauri::{path::BaseDirectory, Emitter, Manager};
 use tauri_plugin_fs::FsExt;
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
+use regex::Regex;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -157,7 +158,10 @@ async fn start_uxplay(app: tauri::AppHandle) {
     let reader = BufReader::new(stdout);
     for line in reader.lines() {
       match line {
-        Ok(l) => log_output(app_stdout.clone(), l),
+        Ok(l) => {
+          tauri::async_runtime::block_on(process_uxplay_output(l.clone()));
+          log_output(app_stdout.clone(), l);
+        }
         Err(e) => log_output(app_stdout.clone(), format!("Error reading stdout: {}", e)),
       };
     }
@@ -197,10 +201,47 @@ async fn start_uxplay(app: tauri::AppHandle) {
 }
 
 fn log_output(
-    app: tauri::AppHandle,
-    output: impl Into<String>,
+  app: tauri::AppHandle,
+  output: impl Into<String>,
 ) {
-    let message = output.into();
-    println!("{}", message);
-    app.emit("uxplay-output", message).unwrap();
+  let message = output.into();
+  println!("{}", message);
+  app.emit("uxplay-output", message).unwrap();
+}
+
+use std::sync::LazyLock;
+
+const ALBUM_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"Album: (.*)").unwrap());
+const TITLE_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"Title: (.*)").unwrap());
+const ARTIST_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"Artist: (.*)").unwrap());
+const GENRE_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"Genre: (.*)").unwrap());
+const AUDIO_PROGRESS_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"audio progress \(min:sec\): (\d+:\d+); remaining: (\d+:\d+); track length (\d+:\d+)").unwrap());
+
+async fn process_uxplay_output(
+  output: String,
+) {
+  if let Some(caps) = ALBUM_REGEX.captures(&output) {
+    let album = caps.get(1).map_or("", |m| m.as_str());
+    println!("=Album: {}", album);
+  }
+  if let Some(caps) = TITLE_REGEX.captures(&output) {
+    let title = caps.get(1).map_or("", |m| m.as_str());
+    println!("=Title: {}", title);
+  }
+  if let Some(caps) = ARTIST_REGEX.captures(&output) {
+    let artist = caps.get(1).map_or("", |m| m.as_str());
+    println!("=Artist: {}", artist);
+  }
+  if let Some(caps) = GENRE_REGEX.captures(&output) {
+    let genre = caps.get(1).map_or("", |m| m.as_str());
+    println!("=Genre: {}", genre);
+  }
+  if let Some(caps) = AUDIO_PROGRESS_REGEX.captures(&output) {
+    let progress = caps.get(1).map_or("", |m| m.as_str());
+    let remaining = caps.get(2).map_or("", |m| m.as_str());
+    let length = caps.get(3).map_or("", |m| m.as_str());
+    println!("=Audio Progress: {}, Remaining: {}, Length: {}", progress, remaining, length);
+  }
+  
+  return 
 }
