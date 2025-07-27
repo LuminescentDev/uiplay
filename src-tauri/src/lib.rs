@@ -6,8 +6,17 @@ use std::{
 use tauri::tray::TrayIconBuilder;
 use tauri::{path::BaseDirectory, Emitter, Manager};
 use tauri_plugin_fs::FsExt;
-use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 use regex::Regex;
+use std::sync::{Arc, Mutex, LazyLock};
+use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
+
+struct DiscordState<'a> {
+  client: DiscordIpcClient,
+  activity: activity::Activity<'a>,
+}
+
+type SharedDiscordState<'a> = Arc<Mutex<Option<DiscordState<'a>>>>;
+static DISCORD_STATE: LazyLock<SharedDiscordState> = LazyLock::new(|| Arc::new(Mutex::new(None)));
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -97,26 +106,18 @@ async fn start_uxplay(app: tauri::AppHandle) {
   let mut client: DiscordIpcClient = DiscordIpcClient::new(
     "1397877327622311997"
   ).expect("Failed to create DiscordIpcClient");
-  let connect_result = client.connect();
-  if let Err(e) = connect_result {
+  if let Err(e) = client.connect() {
     log_output(app.clone(), format!("Failed to connect to Discord IPC: {:?}", e));
   } else {
-    log_output(app.clone(), "Connected to Discord IPC successfully.");
+    let activity: activity::Activity<'_> = activity::Activity::new()
+      .activity_type(activity::ActivityType::Listening);
+
+    *DISCORD_STATE.lock().unwrap() = Some(DiscordState {
+      client,
+      activity,
+    });
+    log_output(app.clone(), "Connected to Discord IPC and activity set.");
   }
-  let activity = activity::Activity::new()
-    .activity_type(activity::ActivityType::Listening)
-    .state("Lil Wayne")
-    .details("A Milli")
-    .assets(activity::Assets::new()
-      .large_image("https://upload.wikimedia.org/wikipedia/en/c/c8/CarterIII.jpg")
-      .large_text("Tha Carter III")
-      .small_image("icon")
-      .small_text("Playing on UiPlay@sab-arch")
-    );
-  if let Err(e) = client.set_activity(activity) {
-    log_output(app.clone(), format!("Failed to set Discord activity: {}", e));
-  }
-  log_output(app.clone(), "Discord activity set successfully.");
 
   // import the default GStreamer plugin path
   let default_path = "/usr/lib/gstreamer-1.0";
@@ -187,10 +188,15 @@ async fn start_uxplay(app: tauri::AppHandle) {
   log_output(app.clone(), format!("UxPlay process exited with status: {}", status));
 
   // Disconnect from Discord IPC
-  if let Err(e) = client.close() {
-    log_output(app.clone(), format!("Failed to close Discord IPC: {}", e));
-  } else {
-    log_output(app.clone(), "Disconnected from Discord IPC successfully.");
+  let mut discord_state = DISCORD_STATE.lock().unwrap();
+  if let Some(state) = discord_state.as_mut() {
+    if let Err(e) = state.client.close() {
+      log_output(app.clone(), format!("Failed to close Discord IPC: {}", e));
+    } else {
+      log_output(app.clone(), "Disconnected from Discord IPC successfully.");
+    }
+    // Remove the state after closing
+    *discord_state = None;
   }
 
   // Attempt to start uxplay again
@@ -209,39 +215,80 @@ fn log_output(
   app.emit("uxplay-output", message).unwrap();
 }
 
-use std::sync::LazyLock;
-
 const ALBUM_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"Album: (.*)").unwrap());
 const TITLE_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"Title: (.*)").unwrap());
 const ARTIST_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"Artist: (.*)").unwrap());
-const GENRE_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"Genre: (.*)").unwrap());
 const AUDIO_PROGRESS_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"audio progress \(min:sec\): (\d+:\d+); remaining: (\d+:\d+); track length (\d+:\d+)").unwrap());
 
 async fn process_uxplay_output(
   output: String,
 ) {
-  if let Some(caps) = ALBUM_REGEX.captures(&output) {
-    let album = caps.get(1).map_or("", |m| m.as_str());
-    println!("=Album: {}", album);
-  }
-  if let Some(caps) = TITLE_REGEX.captures(&output) {
-    let title = caps.get(1).map_or("", |m| m.as_str());
-    println!("=Title: {}", title);
-  }
-  if let Some(caps) = ARTIST_REGEX.captures(&output) {
-    let artist = caps.get(1).map_or("", |m| m.as_str());
-    println!("=Artist: {}", artist);
-  }
-  if let Some(caps) = GENRE_REGEX.captures(&output) {
-    let genre = caps.get(1).map_or("", |m| m.as_str());
-    println!("=Genre: {}", genre);
-  }
-  if let Some(caps) = AUDIO_PROGRESS_REGEX.captures(&output) {
-    let progress = caps.get(1).map_or("", |m| m.as_str());
-    let remaining = caps.get(2).map_or("", |m| m.as_str());
-    let length = caps.get(3).map_or("", |m| m.as_str());
-    println!("=Audio Progress: {}, Remaining: {}, Length: {}", progress, remaining, length);
+  let mut changed = false;
+
+  if let Ok(mut guard) = DISCORD_STATE.lock() {
+    if let Some(state) = guard.as_mut() {
+
+      if let Some(caps) = TITLE_REGEX.captures(&output) {
+        let title = caps.get(1).map_or("", |m| m.as_str()).to_string();
+        state.activity = state.activity.clone().details(Box::leak(title.into_boxed_str()));
+        changed = true;
+      }
+
+      if let Some(caps) = ARTIST_REGEX.captures(&output) {
+        let artist = caps.get(1).map_or("", |m| m.as_str()).to_string();
+        state.activity = state.activity.clone().state(Box::leak(artist.into_boxed_str()));
+        changed = true;
+      }
+
+      if let Some(caps) = ALBUM_REGEX.captures(&output) {
+        let album = caps.get(1).map_or(String::new(), |m| m.as_str().to_string());
+        state.activity = state.activity.clone().assets(
+          activity::Assets::new()
+            .large_image("albumart")  // replace with album-art-specific URL if needed
+            .large_text(Box::leak(album.into_boxed_str()))
+            .small_image("icon")
+            .small_text("UiPlay"),
+        );
+        changed = true;
+      }
+
+      if let Some(caps) = AUDIO_PROGRESS_REGEX.captures(&output) {
+        let progress = caps.get(1).map_or("", |m| m.as_str());
+        let length = caps.get(3).map_or("", |m| m.as_str());
+
+        // Helper to convert "min:sec" to seconds
+        fn parse_min_sec(s: &str) -> Option<i64> {
+          let mut parts = s.split(':');
+          let min = parts.next()?.parse::<i64>().ok()?;
+          let sec = parts.next()?.parse::<i64>().ok()?;
+          Some(min * 60 + sec)
+        }
+
+        let progress_secs = parse_min_sec(progress);
+        let length_secs = parse_min_sec(length);
+
+        // Use current time as base for start timestamp
+        let now = std::time::SystemTime::now()
+          .duration_since(std::time::UNIX_EPOCH)
+          .unwrap()
+          .as_secs() as i64;
+
+        if let (Some(prog), Some(len)) = (progress_secs, length_secs) {
+          let start_ts = now - prog;
+          let end_ts = start_ts + len;
+          state.activity = state.activity.clone().timestamps(
+            activity::Timestamps::new()
+              .start(start_ts)
+              .end(end_ts)
+          );
+        }
+      }
+
+      if changed {
+        let _ = state.client.set_activity(state.activity.clone());
+      }
+    }
   }
   
-  return 
+  return;
 }
