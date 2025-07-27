@@ -54,6 +54,7 @@ pub fn run() {
     .expect("error while running tauri application");
 }
 
+#[tauri::command]
 async fn kill_uxplay(app: tauri::AppHandle) {
   let check = Command::new("pgrep").arg("uxplay").output();
   let mut killed = false;
