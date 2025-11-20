@@ -40,6 +40,8 @@
   --color-nav-bg: --alpha(var(--color-sky-950) / 40%);
   --color-bg: var(--color-gray-950);
 
+  --color-lum-accent: var(--color-luminescent-400);
+
   --lum-depth: 1;
 }
 
@@ -74,7 +76,7 @@ a.lum-btn, a.lum-card {
 
 html {
   font-family: Figtree, sans-serif;
-  background-color: --alpha(var(--color-bg) / 100%);
+  @apply lum-bg-bg/100 rounded-lum border-none
 }
 
 * {

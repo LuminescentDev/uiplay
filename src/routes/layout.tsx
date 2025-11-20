@@ -286,7 +286,7 @@ export default component$(() => {
         <Slot />
       </div>
       <div id="terminal-container" class={{
-        'transition-all duration-300 absolute inset-24 lum-bg-bg/100 border border-lum-border/40 rounded-lum backdrop-blur-lg p-4': true,
+        'transition-all duration-300 absolute inset-24 lum-bg-bg rounded-lum backdrop-blur-lg p-4': true,
         'opacity-0 pointer-events-none -mt-2': !UiPlayStore.TerminalOpen,
       }}>
         <div ref={terminalRef} class="w-full h-full overflow-hidden" />
