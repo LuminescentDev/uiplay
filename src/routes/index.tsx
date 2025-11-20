@@ -8,22 +8,26 @@ export default component$(() => {
 
   return (
     <>
-      <span class="flex items-center gap-2 text-[#f0ccfb]!" style="filter: drop-shadow(0 0 1rem #CB6CE6);">
-        <Airplay size={96} strokeWidth={2} />
-      </span>
-      <h1 class="text-2xl font-bold mt-4">
-        Welcome to UiPlay :3
-      </h1>
-      <p class="text-lg text-gray-300">
-        A UxPlay wrapper that forwards music data to mpris and Discord RPC.
-      </p>
-      {!UiPlayStore.Devices.length && !UiPlayStore.NowPlaying &&
-        <p class="mt-10 text-gray-500">
-          Go ahead and airplay! Info will be displayed here.
-        </p>
-      }
+      <div class="flex items-center gap-8">
+        <div class="flex items-center gap-2 text-[#f0ccfb]!" style="filter: drop-shadow(0 0 4rem #CB6CE6);">
+          <Airplay size={96} strokeWidth={2} />
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold mt-4">
+            Welcome to UiPlay :3
+          </h1>
+          <p class="text-lg text-gray-300">
+            A UxPlay wrapper that forwards music data to mpris and Discord RPC.
+          </p>
+          {!UiPlayStore.Devices.length && !UiPlayStore.NowPlaying &&
+            <p class="text-gray-500">
+              Go ahead and airplay! Info will be displayed right below.
+            </p>
+          }
+        </div>
+      </div>
       {UiPlayStore.NowPlaying &&
-        <div class="lum-card lum-bg-lum-card-bg/80 flex-row items-center mt-8 gap-8 relative overflow-hidden rounded-xl">
+        <div class="lum-card lum-bg-lum-card-bg/80 flex-row items-center mt-8 gap-4 relative overflow-hidden p-4">
           <img
             src={UiPlayStore.NowPlaying.AlbumArt}
             alt="Album Art"
@@ -33,15 +37,13 @@ export default component$(() => {
             style={{ clipPath: 'inset(0 round 0.75rem)' }}
           />
           {UiPlayStore.NowPlaying.AlbumArt &&
-            <div>
-              <img
-                src={UiPlayStore.NowPlaying.AlbumArt}
-                alt="Album Art"
-                width={96}
-                height={96}
-                class="h-24 rounded-lg object-cover"
-              />
-            </div>
+          <div class="flex">
+            <img
+              src={UiPlayStore.NowPlaying.AlbumArt}
+              alt="Album Art"
+              class="w-32 flex aspect-square rounded-lum-4 object-cover"
+            />
+          </div>
           }
           <div class="flex-1">
             <h2 class="text-xl font-semibold flex items-center gap-2">

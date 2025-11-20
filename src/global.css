@@ -24,7 +24,7 @@
   --color-gray-950: oklch(13% 0.028 292.692);
 
   --lum-default-alpha: 40;
-  --lum-border-radius: 0.5rem;
+  --lum-border-radius: var(--radius-3xl);
   --color-green: var(--color-green-900);
   --color-red: var(--color-red-900);
   --color-orange: var(--color-orange-900);
@@ -39,6 +39,8 @@
   --color-lum-border: #dfdfdfaa;
   --color-nav-bg: --alpha(var(--color-sky-950) / 40%);
   --color-bg: var(--color-gray-950);
+
+  --lum-depth: 1;
 }
 
 @media (prefers-color-scheme: light) {

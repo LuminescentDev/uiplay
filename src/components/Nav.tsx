@@ -8,7 +8,10 @@ export default component$(() => {
   const UiPlayStore = useContext(UiPlayStoreContext);
 
   return (
-    <div data-tauri-drag-region class="flex justify-between fixed top-0 w-full lum-bg-gray-900/80 backdrop-blur-lg z-20 border-0 border-b p-2">
+    <div data-tauri-drag-region style={{
+      '--lum-border-radius': 'var(--radius-xl)',
+    }}
+    class="flex justify-between fixed top-0 w-full backdrop-blur-lg z-20 p-2 border-b border-b-gray-900">
       <div>
         <Link href="/" class="lum-btn lum-bg-transparent fill-[#f0ccfb] font-semibold text-[#f0ccfb]!">
           <span class="flex items-center gap-2" style="filter: drop-shadow(0 0 1rem #CB6CE6);">
