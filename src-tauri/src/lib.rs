@@ -1,13 +1,14 @@
 use std::{
   io::{BufRead, BufReader},
   process::{Command, Stdio},
+  sync::{Arc, Mutex, LazyLock},
+  fs::create_dir_all,
 };
 
 use tauri::tray::TrayIconBuilder;
 use tauri::{path::BaseDirectory, Emitter, Manager};
 use tauri_plugin_fs::FsExt;
 use regex::Regex;
-use std::sync::{Arc, Mutex, LazyLock};
 use discord_rich_presence::{activity, DiscordIpc, DiscordIpcClient};
 
 struct DiscordState<'a> {
@@ -34,9 +35,14 @@ pub fn run() {
       let config_dir = app
         .path()
         .resolve("uiplay", BaseDirectory::Config)
-        .expect("Failed to resolve config dir")
+        .expect("Failed to resolve config dir");
+
+      create_dir_all(&config_dir).expect("Failed to create config directory");
+
+      let config_dir = config_dir
         .to_string_lossy()
         .to_string();
+
       // allowed the given directory
       let scope = app.fs_scope();
       let _ = scope.allow_directory(&config_dir, false);
